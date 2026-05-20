@@ -39,6 +39,10 @@
         <span class="user-name">{{ auth.currentUser()?.name }}</span>
         <span class="user-role">Administrador</span>
       </div>
+      <button class="theme-toggle-btn" type="button" (click)="theme.toggle()">
+        <span aria-hidden="true">{{ theme.isDark() ? '☀' : '🌙' }}</span>
+        {{ theme.isDark() ? 'Modo claro' : 'Modo oscuro' }}
+      </button>
       <button class="logout-btn" (click)="auth.logout()">Cerrar sesión</button>
     </div>
 

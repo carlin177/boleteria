@@ -1108,3 +1108,375 @@
   background: var(--accent-dark);
   border-color: var(--accent-dark);
 }
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   DARK MODE — cinematográfico
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Override host-level CSS variables ── */
+:host-context(body.dark) {
+  --bg:         #0F0E0D;
+  --surface:    #1A1918;
+  --border:     #2C2A26;
+  --text:       #F0EDE7;
+  --text-muted: #8A8178;
+  --accent-dim: rgba(232, 150, 26, 0.16);
+  --shadow-sm:  0 1px 4px rgba(0, 0, 0, .32);
+  --shadow-md:  0 4px 20px rgba(0, 0, 0, .58);
+}
+
+/* ── Deeper cinematic vignette on terminal image ── */
+:host-context(body.dark) .terminal-wrapper::before {
+  background: radial-gradient(ellipse at center, transparent 35%, rgba(8, 7, 6, 0.62) 100%);
+}
+
+/* ── Hero bottom: more dramatic gradient ── */
+:host-context(body.dark) .hero-bottom {
+  background: linear-gradient(to bottom, transparent 0%, rgba(6, 5, 4, 0.86) 100%);
+}
+
+/* ── Buscador: dark glassmorphism ── */
+:host-context(body.dark) .buscador-section {
+  background: rgba(18, 17, 16, 0.94);
+  border-color: rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.50),
+    0 2px 8px rgba(0, 0, 0, 0.32),
+    0 0 0 1px rgba(232, 150, 26, 0.08);
+}
+
+/* ── Select fields inside buscador ── */
+:host-context(body.dark) .campo select {
+  background: rgba(15, 14, 12, 0.88);
+  border-color: rgba(44, 42, 38, 1);
+  color: var(--text);
+  color-scheme: dark;
+}
+
+:host-context(body.dark) .campo select:hover:not(:focus) {
+  border-color: rgba(75, 72, 64, 1);
+  background: rgba(22, 20, 18, 0.92);
+}
+
+:host-context(body.dark) .campo select:focus {
+  background: rgba(26, 25, 22, 0.98);
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 3px rgba(232, 150, 26, 0.18),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ── Limpiar button ── */
+:host-context(body.dark) .btn-limpiar {
+  border-color: var(--border);
+  color: var(--text-muted);
+  background: transparent;
+}
+
+:host-context(body.dark) .btn-limpiar:hover {
+  border-color: rgba(185, 28, 28, 0.55);
+  color: #e07070;
+  background: rgba(185, 28, 28, 0.08);
+}
+
+/* ── Viaje cards: elevated floating shadow ── */
+:host-context(body.dark) .viaje-card {
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, .35),
+    0 6px 22px rgba(0, 0, 0, .28);
+}
+
+:host-context(body.dark) .viaje-card:hover {
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, .65),
+    0 4px 12px rgba(0, 0, 0, .42),
+    0 0 0 1px rgba(232, 150, 26, 0.15);
+}
+
+/* ── Card tear separator ── */
+:host-context(body.dark) .card-tear {
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+/* ── Viajes panel ── */
+:host-context(body.dark) .viajes-panel {
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, .40),
+    0 8px 32px rgba(0, 0, 0, .32);
+}
+
+/* ── Theme toggle button — minimal in dark header ── */
+.btn-theme-toggle {
+  padding: 0.38rem 0.6rem;
+  min-width: 34px;
+  font-size: 1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   NUEVA EXPERIENCIA INMERSIVA — módulo de búsqueda cinematográfico
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Buscador / panel de resultados legados — ocultos temporalmente ── */
+.home-content { display: none; }
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   SEARCH MODULE
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.search-module {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+
+  width: min(480px, calc(100vw - 2.5rem));
+  padding: 2.25rem 2rem 2rem;
+
+  background: rgba(10, 9, 8, 0.65);
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-top-color: rgba(255, 255, 255, 0.10);
+  border-bottom-color: rgba(0, 0, 0, 0.25);
+  border-left-color: rgba(232, 150, 26, 0.10);
+  border-radius: 20px;
+
+  box-shadow:
+    0 32px 72px rgba(0, 0, 0, 0.62),
+    0 8px 28px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+
+  pointer-events: auto;
+  animation: searchModuleIn 0.72s cubic-bezier(0.16, 1, 0.3, 1) 0.10s both;
+}
+
+@keyframes searchModuleIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -44%);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+    filter: blur(0);
+  }
+}
+
+/* ── Supratítulo ambiental ── */
+.search-kicker {
+  font-size: 0.6rem;
+  letter-spacing: 2.8px;
+  text-transform: uppercase;
+  color: rgba(232, 150, 26, 0.62);
+  font-weight: 600;
+  margin-bottom: 0.62rem;
+  animation: searchItemIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both;
+}
+
+/* ── Titular principal ── */
+.search-headline {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.85rem;
+  font-weight: 300;
+  color: #F0EDE7;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  margin-bottom: 1.6rem;
+  animation: searchItemIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.32s both;
+}
+
+/* ── Row: barra + botón continuar ── */
+.search-bar-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: stretch;
+  animation: searchItemIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.42s both;
+}
+
+/* ── Barra de búsqueda glassmorphism ── */
+.search-bar {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+
+  background: rgba(240, 237, 231, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0 0.65rem 0 1.05rem;
+
+  transition:
+    border-color 0.24s ease,
+    background   0.24s ease,
+    box-shadow   0.24s ease;
+}
+
+.search-bar:focus-within {
+  border-color: rgba(232, 150, 26, 0.45);
+  background: rgba(240, 237, 231, 0.10);
+  box-shadow:
+    0 0 0 3px rgba(232, 150, 26, 0.10),
+    0 4px 18px rgba(0, 0, 0, 0.24);
+}
+
+/* ── Icono de búsqueda ── */
+.search-bar-icon {
+  display: flex;
+  align-items: center;
+  color: rgba(240, 237, 231, 0.26);
+  flex-shrink: 0;
+  transition: color 0.22s ease;
+}
+
+.search-bar:focus-within .search-bar-icon {
+  color: rgba(232, 150, 26, 0.55);
+}
+
+/* ── Campo de texto ── */
+.search-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #F0EDE7;
+  font-size: 0.975rem;
+  font-family: inherit;
+  font-weight: 400;
+  padding: 0.9rem 0;
+  caret-color: var(--accent);
+  letter-spacing: 0.1px;
+}
+
+.search-input::placeholder {
+  color: rgba(240, 237, 231, 0.28);
+  font-style: italic;
+  font-weight: 300;
+  letter-spacing: 0.2px;
+}
+
+/* ── Botón micrófono ── */
+.mic-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  cursor: pointer;
+  color: rgba(240, 237, 231, 0.30);
+
+  transition:
+    background    0.22s ease,
+    border-color  0.22s ease,
+    color         0.22s ease,
+    transform     0.16s ease;
+}
+
+.mic-btn:hover {
+  background: rgba(232, 150, 26, 0.10);
+  border-color: rgba(232, 150, 26, 0.28);
+  color: rgba(232, 150, 26, 0.72);
+  transform: scale(1.08);
+}
+
+.mic-btn:active {
+  transform: scale(0.94);
+}
+
+/* ── Botón Continuar ── */
+.btn-continuar {
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+  padding: 0 1.3rem;
+  flex-shrink: 0;
+
+  background: var(--accent);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: #fff;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+
+  transition:
+    background  0.22s ease,
+    box-shadow  0.22s ease,
+    transform   0.18s ease;
+}
+
+.btn-continuar:hover {
+  background: var(--accent-dark);
+  box-shadow: 0 6px 22px rgba(232, 150, 26, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-continuar:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(232, 150, 26, 0.28);
+}
+
+/* ── Flecha del botón continuar ── */
+.btn-continuar-arrow {
+  display: flex;
+  align-items: center;
+  transition: transform 0.2s ease;
+}
+
+.btn-continuar:hover .btn-continuar-arrow {
+  transform: translateX(3px);
+}
+
+/* ── Animación de entrada escalonada para ítems del módulo ── */
+@keyframes searchItemIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Responsive: apilado en pantallas pequeñas ── */
+@media (max-width: 520px) {
+  .search-module {
+    padding: 1.75rem 1.25rem 1.5rem;
+    border-radius: 16px;
+  }
+
+  .search-headline {
+    font-size: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .search-bar-row {
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .btn-continuar {
+    width: 100%;
+    justify-content: center;
+    padding: 0.88rem;
+  }
+}

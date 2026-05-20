@@ -20,6 +20,44 @@ body { margin: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, .06);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, .10);
   --ease: 0.18s ease;
+  /* Elevated surface for table heads, card heads, guide boxes */
+  --surface-alt: #F9F8F5;
+  /* Background for textarea and text input fields */
+  --input-bg:    #FAFAF8;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  transition: background-color 0.28s ease, color 0.22s ease;
+}
+
+/* ─── Dark mode ──────────────────────────────────────────────────────────── */
+body.dark {
+  --bg:          #0F0E0D;
+  --surface:     #1A1918;
+  --border:      #2C2A26;
+  --text:        #F0EDE7;
+  --text-muted:  #8A8178;
+  --accent-dim:  rgba(232, 150, 26, 0.16);
+  --shadow-sm:   0 1px 4px rgba(0, 0, 0, .32);
+  --shadow-md:   0 4px 20px rgba(0, 0, 0, .58);
+  --surface-alt: #1E1D1B;
+  --input-bg:    #141312;
+  color-scheme: dark;
+}
+
+/* ─── Smooth theme transitions ───────────────────────────────────────────── */
+body.theme-transitioning,
+body.theme-transitioning *,
+body.theme-transitioning *::before,
+body.theme-transitioning *::after {
+  transition:
+    background-color 0.28s ease,
+    background 0.28s ease,
+    color 0.22s ease,
+    border-color 0.25s ease,
+    box-shadow 0.28s ease !important;
 }
 
 /* ─── Admin shared UI components ────────────────────────────────────────────── */
@@ -87,7 +125,7 @@ body { margin: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
 }
 
 .data-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-.data-table thead { background: #F9F8F5; }
+.data-table thead { background: var(--surface-alt); }
 .data-table th {
   padding: 0.8rem 1rem;
   text-align: left;
@@ -105,7 +143,7 @@ body { margin: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
   vertical-align: middle;
 }
 .data-table tbody tr:last-child td { border-bottom: none; }
-.data-table tbody tr:hover { background: #FAFAF7; }
+.data-table tbody tr:hover { background: var(--surface-alt); }
 .actions { white-space: nowrap; }
 .empty-row { text-align: center; color: var(--text-muted); padding: 2.5rem 1rem !important; }
 
@@ -227,3 +265,8 @@ dialog.modal::backdrop { background: rgba(0, 0, 0, 0.45); }
   border-top: 1px solid var(--border);
   margin-top: 0.25rem;
 }
+
+/* ─── Dark mode: shared component overrides ─────────────────────────────────── */
+body.dark dialog.modal::backdrop  { background: rgba(0, 0, 0, 0.68); }
+body.dark .field-hint              { color: var(--text-muted); }
+body.dark .form-error              { background: rgba(220, 53, 69, 0.12); }

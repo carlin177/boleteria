@@ -5,6 +5,7 @@ import { ViajesService } from '../../services/viajes.service';
 import { EmpresasService } from '../../services/empresas.service';
 import { CiudadesService } from '../../services/ciudades.service';
 import { AuthService } from '../../services/auth.service';
+import { ThemeService } from '../../services/theme.service';
 import { Empresa } from '../../models/empresa.model';
 import { Ciudad } from '../../models/ciudad.model';
 import { Viaje, ViajesFiltros } from '../../models/viaje.model';
@@ -42,7 +43,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   private readonly ciudadesService = inject(CiudadesService);
 
   // Expuesto como protected para que el template pueda acceder al estado de sesión
-  protected readonly auth = inject(AuthService);
+  protected readonly auth  = inject(AuthService);
+  protected readonly theme = inject(ThemeService);
   // Referencia al contenedor de la terminal (para cálculo de % en el editor)
   @ViewChild('terminalWrapper') private readonly terminalWrapperRef!: ElementRef<HTMLElement>;
   // ── Estado ──────────────────────────────────────────────────────────────────

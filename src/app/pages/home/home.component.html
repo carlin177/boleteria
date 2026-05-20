@@ -28,6 +28,13 @@
         } @else {
           <a class="btn-header btn-login" routerLink="/login">Ingresar</a>
         }
+        <button
+          class="btn-header btn-theme-toggle"
+          type="button"
+          (click)="theme.toggle()"
+          [title]="theme.isDark() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+          aria-label="Alternar modo oscuro"
+        >{{ theme.isDark() ? '☀' : '🌙' }}</button>
       </nav>
 
     </div>
@@ -119,6 +126,59 @@
               <button class="editor-btn editor-btn--reset" type="button" (click)="resetZones()">Restaurar</button>
               <button class="editor-btn editor-btn--save"  type="button" (click)="saveZones()">Guardar</button>
             </div>
+          </div>
+        }
+
+        @if (!editorMode()) {
+          <!-- ── MÓDULO DE BÚSQUEDA PRINCIPAL ──────────────────────────────── -->
+          <div class="search-module" role="search" aria-label="Búsqueda de destino">
+
+            <p class="search-kicker" aria-hidden="true">Terminal de Ómnibus · Goya</p>
+            <h1 class="search-headline">¿A dónde querés viajar?</h1>
+
+            <div class="search-bar-row">
+
+              <div class="search-bar">
+                <span class="search-bar-icon" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  class="search-input"
+                  placeholder="Ciudad de destino..."
+                  aria-label="Ingresá el destino de tu viaje"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+                <button
+                  type="button"
+                  class="mic-btn"
+                  aria-label="Buscar por voz"
+                  title="Reconocimiento de voz (próximamente)"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                    <line x1="12" y1="19" x2="12" y2="23"/>
+                    <line x1="8" y1="23" x2="16" y2="23"/>
+                  </svg>
+                </button>
+              </div>
+
+              <button type="button" class="btn-continuar">
+                <span>Continuar</span>
+                <span class="btn-continuar-arrow" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                    <polyline points="12 5 19 12 12 19"/>
+                  </svg>
+                </span>
+              </button>
+
+            </div>
+
           </div>
         }
 

@@ -41,7 +41,7 @@
 /* ─── Format Guide ────────────────────────────────────────────────────────────── */
 
 .format-guide {
-  background: #F9F8F5;
+  background: var(--surface-alt);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 1rem 1.25rem;
@@ -97,7 +97,7 @@
   padding: 0.875rem 1rem;
   border: 1.5px solid var(--border);
   border-radius: 8px;
-  background: #FAFAF8;
+  background: var(--input-bg);
   color: var(--text);
   resize: vertical;
   transition: border-color var(--ease), background var(--ease);
@@ -187,7 +187,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.55rem 1rem;
-  background: #F9F8F5;
+  background: var(--surface-alt);
   border-bottom: 1px solid var(--border);
 }
 
