@@ -1,0 +1,1110 @@
+/* ── Variables ─────────────────────────────────────────────────────────────── */
+:host {
+  --bg:           #F5F4F0;
+  --surface:      #FFFFFF;
+  --border:       #E5E2D8;
+  --text:         #1A1918;
+  --text-muted:   #7A7568;
+  --accent:       #E8961A;
+  --accent-dim:   rgba(232, 150, 26, 0.14);
+  --accent-dark:  #C87A10;
+  --error:        #DC3545;
+  --radius:       10px;
+  --shadow-sm:    0 1px 6px rgba(0, 0, 0, 0.07);
+  --shadow-md:    0 4px 20px rgba(0, 0, 0, 0.10);
+  --ease:         0.22s ease;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Shell ──────────────────────────────────────────────────────────────────── */
+.app-shell {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: 56px;
+  background: rgba(26, 25, 24, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(232, 150, 26, 0.2);
+}
+
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: #F0EDE7;
+  font-size: 1.05rem;
+}
+
+.brand-icon { font-size: 1.4rem; line-height: 1; }
+
+.brand-text strong { color: var(--accent); }
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.header-user {
+  font-size: 0.85rem;
+  color: rgba(240, 237, 231, 0.45);
+  padding-right: 0.4rem;
+}
+
+.btn-header {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.38rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--ease), color var(--ease), border-color var(--ease);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: transparent;
+  color: rgba(240, 237, 231, 0.78);
+}
+
+.btn-header:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-login {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn-login:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+  color: #fff;
+}
+
+.btn-logout {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+/* ── Main ───────────────────────────────────────────────────────────────────── */
+.app-main {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Sección terminal (foto + overlay) ──────────────────────────────────────── */
+.terminal-section {
+  position: relative;
+  height: 100vh;
+  min-height: 600px;
+}
+
+.terminal-wrapper {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.terminal-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(15, 14, 13, 0.35) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.terminal-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  user-select: none;
+  object-fit: cover;
+  object-position: center center;
+}
+
+/* ── Ventanillas interactivas ─────────────────────────────────────────────── */
+
+/* Zona base — COMPLETAMENTE INVISIBLE en reposo */
+.ventanilla-zona {
+  position: absolute;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 0.9rem;
+  transition: box-shadow 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  z-index: 2;
+}
+
+/*
+  Glow desde el piso — radial, no rectangular.
+  El elipse nace en el 96% inferior (sill de la ventanilla) y se disuelve
+  hacia arriba. Nunca cubre la zona entera: imposible verse como rectángulo.
+*/
+.ventanilla-zona::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 85% 52% at 50% 98%,
+    rgba(232, 150, 26, 0.18) 0%,
+    rgba(232, 150, 26, 0.07) 42%,
+    transparent 68%
+  );
+  opacity: 0;
+  transition: opacity 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Indicador inferior — apenas visible en reposo, crece al interactuar */
+.ventanilla-zona::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 28%;
+  right: 28%;
+  height: 1.5px;
+  background: rgba(232, 150, 26, 0.16);
+  border-radius: 1px;
+  transition:
+    left   0.38s cubic-bezier(0.4, 0, 0.2, 1),
+    right  0.38s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.32s ease,
+    background 0.32s ease,
+    box-shadow 0.32s ease;
+  pointer-events: none;
+}
+
+/* ── Hover ── */
+.ventanilla-zona:hover {
+  box-shadow: inset 0 -90px 80px -30px rgba(232, 150, 26, 0.08);
+}
+
+.ventanilla-zona:hover::before {
+  opacity: 1;
+}
+
+.ventanilla-zona:hover::after {
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: rgba(232, 150, 26, 0.58);
+  box-shadow:
+    0 0 7px  rgba(232, 150, 26, 0.4),
+    0 0 16px rgba(232, 150, 26, 0.16);
+}
+
+/* ── Activo — glow más cálido, línea sólida ── */
+.ventanilla-zona.active {
+  box-shadow: inset 0 -90px 90px -20px rgba(232, 150, 26, 0.12);
+}
+
+.ventanilla-zona.active::before {
+  opacity: 1;
+  background: radial-gradient(
+    ellipse 85% 52% at 50% 98%,
+    rgba(232, 150, 26, 0.24) 0%,
+    rgba(232, 150, 26, 0.10) 44%,
+    transparent 68%
+  );
+}
+
+.ventanilla-zona.active::after {
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--accent);
+  box-shadow:
+    0 0 10px rgba(232, 150, 26, 0.62),
+    0 0 22px rgba(232, 150, 26, 0.25);
+}
+
+/* ── Focus teclado ── */
+.ventanilla-zona:focus-visible {
+  outline: none;
+  box-shadow:
+    inset 0 -90px 80px -30px rgba(232, 150, 26, 0.08),
+    inset 0 0 0 2px rgba(232, 150, 26, 0.38);
+}
+
+/* ── Badge de número de ventanilla ── */
+.ventanilla-num {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-6px);
+  background: rgba(15, 12, 8, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(232, 150, 26, 0.65);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 0.18rem 0.52rem;
+  border-radius: 4px;
+  border: 1px solid rgba(232, 150, 26, 0.14);
+  opacity: 0;
+  transition: opacity 0.28s ease, transform 0.28s ease;
+  pointer-events: none;
+  z-index: 3;
+  white-space: nowrap;
+}
+
+.ventanilla-zona:hover .ventanilla-num,
+.ventanilla-zona.active .ventanilla-num {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.ventanilla-zona.active .ventanilla-num {
+  color: var(--accent);
+  border-color: rgba(232, 150, 26, 0.35);
+}
+
+/* ── Chip de empresa (nombre + CTA) ── */
+.ventanilla-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.18rem;
+  background: rgba(15, 12, 8, 0.74);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(232, 150, 26, 0.25);
+  border-radius: 8px;
+  padding: 0.42rem 0.9rem;
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 0.26s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.26s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.26s ease,
+    box-shadow 0.26s ease;
+  pointer-events: none;
+  z-index: 3;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.38);
+}
+
+.ventanilla-zona:hover .ventanilla-chip,
+.ventanilla-zona.active .ventanilla-chip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ventanilla-zona.active .ventanilla-chip {
+  border-color: rgba(232, 150, 26, 0.5);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.38), 0 0 14px rgba(232, 150, 26, 0.18);
+}
+
+.ventanilla-nombre {
+  font-size: 0.81rem;
+  font-weight: 600;
+  color: #F0EDE7;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.ventanilla-cta {
+  font-size: 0.63rem;
+  color: rgba(232, 150, 26, 0.75);
+  letter-spacing: 0.4px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ventanilla-zona.active .ventanilla-cta {
+  color: var(--accent);
+}
+
+/* Overlay de carga sobre la foto */
+.overlay-loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 25, 24, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  color: rgba(240, 237, 231, 0.8);
+  backdrop-filter: blur(4px);
+  z-index: 3;
+}
+
+/* Overlay inferior: gradiente + metadatos de ubicación + hint */
+.hero-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 4rem 1.5rem 1.1rem;
+  background: linear-gradient(to bottom, transparent 0%, rgba(15, 14, 13, 0.65) 100%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hero-location {
+  font-size: 0.7rem;
+  color: rgba(240, 237, 231, 0.6);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.hero-hint {
+  font-size: 0.7rem;
+  color: rgba(240, 237, 231, 0.4);
+  letter-spacing: 0.3px;
+  font-style: italic;
+}
+
+/* ── Contenido bajo el hero ────────────────────────────────────────────────────────── */
+.home-content {
+  max-width: 1100px;
+  margin: -3.5rem auto 0;
+  width: 100%;
+  padding: 0 1.5rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Buscador — glassmorphism flotante ─────────────────────────────────────── */
+.buscador-section {
+  position: relative;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  border-radius: 14px;
+  padding: 1.4rem 1.6rem;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.07),
+    0 0 0 1px rgba(232, 150, 26, 0.07);
+}
+
+.buscador-inner {
+  width: 100%;
+}
+
+.buscador-titulo {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 1rem;
+  letter-spacing: -0.1px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.buscador-titulo::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.buscador-controles {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-end;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  flex: 1;
+  min-width: 180px;
+  position: relative;
+}
+
+.campo label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.campo select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(245, 244, 240, 0.72);
+  border: 1.5px solid rgba(229, 226, 216, 0.85);
+  color: var(--text);
+  padding: 0.62rem 2.2rem 0.62rem 0.9rem;
+  border-radius: 9px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  width: 100%;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.campo select:hover:not(:focus) {
+  border-color: rgba(170, 164, 150, 0.9);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.campo select:focus {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 0 0 3px rgba(232, 150, 26, 0.13),
+    0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Chevron personalizado */
+.campo::after {
+  content: '';
+  position: absolute;
+  right: 0.88rem;
+  bottom: 0.82rem;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-right: 1.5px solid var(--text-muted);
+  border-bottom: 1.5px solid var(--text-muted);
+  transform: rotate(45deg);
+  pointer-events: none;
+  transition: border-color 0.2s ease;
+}
+
+.campo:focus-within::after {
+  border-color: var(--accent);
+}
+
+.campo-flecha {
+  color: rgba(122, 117, 104, 0.4);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  align-self: flex-end;
+  margin-bottom: 0.78rem;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.btn-limpiar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: transparent;
+  border: 1.5px solid rgba(229, 226, 216, 0.85);
+  color: var(--text-muted);
+  padding: 0.62rem 1rem;
+  border-radius: 9px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  align-self: flex-end;
+  white-space: nowrap;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.btn-limpiar:hover {
+  border-color: rgba(185, 28, 28, 0.4);
+  color: #b91c1c;
+  background: rgba(185, 28, 28, 0.05);
+}
+
+
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .home-content {
+    margin-top: -2rem;
+    padding: 0 1rem 3rem;
+    gap: 1.25rem;
+  }
+
+  .buscador-section {
+    border-radius: 10px;
+    padding: 1.1rem 1.2rem;
+  }
+
+  .buscador-controles {
+    flex-direction: column;
+  }
+
+  .campo {
+    min-width: 100%;
+  }
+
+  .campo-flecha {
+    display: none;
+  }
+
+  .btn-limpiar {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .viajes-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Panel de viajes ────────────────────────────────────────────────────────── */
+.viajes-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  animation: fadeUp 0.28s ease both;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.panel-titulo {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.panel-badge {
+  font-size: 0.75rem;
+  color: var(--accent);
+  background: var(--accent-dim);
+  padding: 0.15rem 0.6rem;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* Loading, error, vacío dentro del panel */
+.estado-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.estado-error {
+  color: var(--error);
+  text-align: center;
+  padding: 2.5rem;
+  font-size: 0.9rem;
+}
+
+.estado-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3.5rem 2rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.estado-vacio span {
+  font-size: 2rem;
+  display: block;
+  opacity: 0.6;
+}
+
+.estado-vacio p {
+  font-size: 0.88rem;
+  max-width: 260px;
+  line-height: 1.55;
+}
+
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+
+/* ── Grilla de viajes ─────────────────────────────────────────────────────── */
+.viajes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 1rem;
+}
+
+/* ── Card de viaje — boarding pass ─────────────────────────────────────────── */
+.viaje-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  transition:
+    transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.05),
+    0 4px 14px rgba(0, 0, 0, 0.04);
+  will-change: transform;
+}
+
+.viaje-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.09),
+    0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.viaje-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Cabecera: empresa (izq) + badge (der) */
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.72rem 0.9rem 0.45rem 0.85rem;
+  gap: 0.5rem;
+}
+
+.empresa-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.servicio-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 0.2rem 0.58rem;
+  border-radius: 20px;
+  background: var(--accent-dim);
+  color: var(--accent-dark);
+  border: 1px solid rgba(232, 150, 26, 0.22);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Ruta: tiempos protagonistas sobre ciudad */
+.card-ruta {
+  display: flex;
+  align-items: center;
+  padding: 0.15rem 0.9rem 0.9rem 0.85rem;
+  gap: 0.4rem;
+}
+
+.ciudad-bloque {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+}
+
+.ciudad-bloque--der {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.ruta-hora {
+  font-size: 1.45rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+
+.ciudad-nombre {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ciudad-etiqueta {
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+/* Conector visual: líneas + flecha central */
+.ruta-conector {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  padding-bottom: 0.95rem;
+}
+
+.ruta-linea {
+  display: block;
+  width: 14px;
+  height: 1px;
+  background: var(--border);
+}
+
+.ruta-icono {
+  font-size: 0.7rem;
+  color: var(--accent);
+  line-height: 1;
+}
+
+/* Separador estilo pasaje perforado */
+.card-tear {
+  border-top: 1.5px dashed rgba(0, 0, 0, 0.09);
+  margin: 0 0.85rem;
+}
+
+/* Sección de precio */
+.card-footer {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0.6rem 0.9rem 0.75rem 0.85rem;
+  margin-top: auto;
+}
+
+.precio-etiqueta {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.precio {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .terminal-section {
+    height: 70vh;
+    min-height: 350px;
+  }
+
+  .buscador-controles {
+    flex-direction: column;
+  }
+
+  .viajes-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   OVERLAY EDITOR MODE
+   Solo visible para administradores. No afecta el modo normal.
+══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Botón toggle en el header ──────────────────────────────────────────────── */
+.btn-editor-toggle {
+  background: rgba(232, 150, 26, 0.1);
+  border-color: rgba(232, 150, 26, 0.3);
+  color: rgba(232, 150, 26, 0.85);
+}
+
+.btn-editor-toggle:hover {
+  background: rgba(232, 150, 26, 0.18);
+  border-color: rgba(232, 150, 26, 0.5);
+  color: var(--accent);
+}
+
+.btn-editor-toggle--on {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #fff !important;
+}
+
+.btn-editor-toggle--on:hover {
+  background: var(--accent-dark) !important;
+  border-color: var(--accent-dark) !important;
+}
+
+/* ── Contenedor en modo editor ──────────────────────────────────────────────── */
+.terminal-wrapper.editor-active {
+  cursor: default;
+  user-select: none;
+}
+
+.terminal-wrapper.editor-active .hero-bottom {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Zona en modo editor ────────────────────────────────────────────────────── */
+.ventanilla-zona.editor-zone {
+  background: rgba(232, 150, 26, 0.06);
+  border: 1.5px dashed rgba(232, 150, 26, 0.45) !important;
+  border-radius: 4px;
+  cursor: move;
+}
+
+.ventanilla-zona.editor-zone:hover {
+  background: rgba(232, 150, 26, 0.1);
+  border-color: rgba(232, 150, 26, 0.7) !important;
+  box-shadow: none;
+}
+
+/* Desactivar pseudo-elementos de glow/indicador en modo editor */
+.ventanilla-zona.editor-zone::before,
+.ventanilla-zona.editor-zone::after {
+  display: none;
+}
+
+/* Zona seleccionada activa */
+.ventanilla-zona.editor-selected {
+  background: rgba(232, 150, 26, 0.1) !important;
+  border: 1.5px solid rgba(232, 150, 26, 0.85) !important;
+  box-shadow:
+    0 0 0 2px rgba(232, 150, 26, 0.22),
+    inset 0 0 24px rgba(232, 150, 26, 0.07) !important;
+}
+
+/* ── Etiqueta centrada en la zona ───────────────────────────────────────────── */
+.editor-zone-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.22rem;
+  pointer-events: none;
+}
+
+.editor-zone-num {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: rgba(232, 150, 26, 0.75);
+  font-family: 'Courier New', monospace;
+  line-height: 1;
+}
+
+.editor-zone-name {
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.52);
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ── Handles de redimensionamiento ─────────────────────────────────────────── */
+.resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1.5px solid rgba(232, 150, 26, 0.82);
+  border-radius: 2px;
+  z-index: 5;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  transition: transform 0.14s ease, background 0.14s ease;
+}
+
+.resize-handle:hover {
+  background: var(--accent);
+  border-color: var(--accent-dark);
+  transform: scale(1.25);
+}
+
+.resize-nw { top: -5px;    left: -5px;   cursor: nw-resize; }
+.resize-ne { top: -5px;    right: -5px;  cursor: ne-resize; }
+.resize-sw { bottom: -5px; left: -5px;   cursor: sw-resize; }
+.resize-se { bottom: -5px; right: -5px;  cursor: se-resize; }
+
+/* ── Toolbar flotante en el hero ────────────────────────────────────────────── */
+.editor-toolbar {
+  position: absolute;
+  bottom: 1.1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(15, 12, 8, 0.84);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(232, 150, 26, 0.3);
+  border-radius: 10px;
+  padding: 0.55rem 0.95rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+  max-width: calc(100% - 2rem);
+}
+
+.editor-toolbar-info {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.editor-coord {
+  font-size: 0.63rem;
+  font-family: 'Courier New', Courier, monospace;
+  color: rgba(232, 150, 26, 0.92);
+  background: rgba(232, 150, 26, 0.09);
+  padding: 0.12rem 0.38rem;
+  border-radius: 4px;
+  border: 1px solid rgba(232, 150, 26, 0.2);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.editor-hint {
+  font-size: 0.63rem;
+  color: rgba(240, 237, 231, 0.42);
+  font-style: italic;
+  letter-spacing: 0.2px;
+}
+
+.editor-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.editor-saved {
+  font-size: 0.63rem;
+  color: #4ade80;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  animation: fadeUp 0.2s ease both;
+}
+
+.editor-btn {
+  font-size: 0.68rem;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 0.28rem 0.72rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+  letter-spacing: 0.2px;
+}
+
+.editor-btn--reset {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(240, 237, 231, 0.5);
+}
+
+.editor-btn--reset:hover {
+  border-color: rgba(220, 53, 69, 0.5);
+  color: #ef4444;
+  background: rgba(220, 53, 69, 0.08);
+}
+
+.editor-btn--save {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: #fff;
+}
+
+.editor-btn--save:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}

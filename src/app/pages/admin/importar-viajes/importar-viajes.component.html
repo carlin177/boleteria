@@ -1,0 +1,199 @@
+<div class="page-section import-page">
+
+  <!-- ─── Header ─────────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">⚡ Carga Rápida</h1>
+      <p class="page-subtitle">Importá múltiples viajes en segundos pegando texto estructurado</p>
+    </div>
+  </div>
+
+  <!-- ─── Error de catálogos ──────────────────────────────────────────────────── -->
+  @if (loadError()) {
+    <div class="alert-error">
+      <strong>Error de conexión:</strong> {{ loadError() }}
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <!-- FASE 1 — ENTRADA DE TEXTO                                                  -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  @if (importState() === 'idle') {
+
+    <div class="import-card">
+
+      <!-- Guía de formato -->
+      <div class="format-guide">
+        <p class="guide-title">Formato requerido — un viaje por línea</p>
+        <code class="format-header">Empresa,Origen,Destino,Salida,Llegada,Servicio,Precio</code>
+        <div class="example-lines">
+          <span>Singer,Goya,Corrientes,08:30,11:00,Semi Cama,25000</span>
+          <span>Singer,Goya,Resistencia,14:00,18:30,Cama,42000</span>
+          <span>ERSA,Goya,Santa Fe,22:00,05:30,Ejecutivo,55000</span>
+        </div>
+        <p class="guide-hint">
+          Los nombres de empresa y ciudad deben coincidir exactamente con los registrados en el sistema.
+        </p>
+      </div>
+
+      <!-- Textarea principal -->
+      <textarea
+        class="import-textarea"
+        [(ngModel)]="rawText"
+        spellcheck="false"
+        autocomplete="off"
+        placeholder="Singer,Goya,Corrientes,08:30,11:00,Semi Cama,25000
+Singer,Goya,Resistencia,14:00,18:30,Cama,42000
+ERSA,Goya,Santa Fe,22:00,05:30,Ejecutivo,55000"
+      ></textarea>
+
+      <div class="import-actions">
+        <button
+          class="btn-primary btn-lg"
+          (click)="previsualizar()"
+          [disabled]="!rawText.trim() || !catalogsReady()"
+        >
+          @if (!catalogsReady()) {
+            Cargando catálogos…
+          } @else {
+            Previsualizar datos →
+          }
+        </button>
+      </div>
+
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <!-- FASE 2 — PREVIEW                                                           -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  @if (importState() === 'previewing') {
+
+    <!-- Resumen de validación -->
+    <div class="preview-stats">
+      <div class="stat-badge stat-valid">
+        <span class="stat-icon">✓</span>
+        <span class="stat-num">{{ validCount() }}</span>
+        <span class="stat-label">{{ validCount() === 1 ? 'viaje listo' : 'viajes listos' }}</span>
+      </div>
+      @if (errorCount() > 0) {
+        <div class="stat-badge stat-invalid">
+          <span class="stat-icon">✗</span>
+          <span class="stat-num">{{ errorCount() }}</span>
+          <span class="stat-label">{{ errorCount() === 1 ? 'con error' : 'con errores' }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- Grid de tarjetas -->
+    <div class="entries-grid">
+      @for (entry of entries(); track entry.lineNumber) {
+        <div class="entry-card" [class.entry-valid]="entry.fullyValid" [class.entry-invalid]="!entry.fullyValid">
+
+          <!-- Cabecera de la tarjeta -->
+          <div class="entry-head">
+            <span class="line-num">Línea {{ entry.lineNumber }}</span>
+            @if (entry.fullyValid) {
+              <span class="status-chip chip-valid">✓ Listo</span>
+            } @else {
+              <span class="status-chip chip-invalid">✗ Error</span>
+            }
+          </div>
+
+          <!-- Datos interpretados -->
+          <div class="entry-data">
+            <div class="data-row">
+              <span class="data-label">Empresa</span>
+              <span class="data-val">{{ entry.empresa || '—' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Ruta</span>
+              <span class="data-val">{{ entry.origen || '—' }} → {{ entry.destino || '—' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Horario</span>
+              <span class="data-val">{{ entry.hora_salida || '—' }} – {{ entry.hora_llegada || '—' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Servicio</span>
+              <span class="data-val">{{ entry.tipo_servicio || '—' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Precio</span>
+              <span class="data-val data-price">
+                @if (entry.precio > 0) {
+                  ${{ entry.precio | number:'1.0-0' }}
+                } @else {
+                  —
+                }
+              </span>
+            </div>
+          </div>
+
+          <!-- Lista de errores (solo si los hay) -->
+          @if (entry.errors.length > 0) {
+            <ul class="error-list">
+              @for (err of entry.errors; track err) {
+                <li>{{ err }}</li>
+              }
+            </ul>
+          }
+
+        </div>
+      }
+    </div>
+
+    <!-- Acciones de confirmación -->
+    <div class="confirm-actions">
+      <button class="btn-secondary" (click)="resetImport()">← Volver a editar</button>
+      @if (validCount() > 0) {
+        <button class="btn-primary btn-lg" (click)="confirmarImportacion()">
+          Confirmar importación — {{ validCount() }} {{ validCount() === 1 ? 'viaje' : 'viajes' }}
+        </button>
+      }
+    </div>
+
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <!-- FASE 3 — IMPORTANDO                                                        -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  @if (importState() === 'importing') {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Importando viajes al sistema…</p>
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <!-- FASE 4 — RESULTADO                                                         -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  @if (importState() === 'done') {
+    <div class="done-card">
+      <div class="done-icon">
+        {{ importResults().failed === 0 ? '🎉' : '⚠️' }}
+      </div>
+      <h2 class="done-title">
+        {{ importResults().failed === 0 ? 'Importación exitosa' : 'Importación completada' }}
+      </h2>
+
+      <div class="done-stats">
+        <div class="done-stat done-stat-success">
+          <strong>{{ importResults().success }}</strong>
+          <span>{{ importResults().success === 1 ? 'viaje importado' : 'viajes importados' }}</span>
+        </div>
+        @if (importResults().failed > 0) {
+          <div class="done-stat done-stat-fail">
+            <strong>{{ importResults().failed }}</strong>
+            <span>{{ importResults().failed === 1 ? 'falló' : 'fallaron' }}</span>
+          </div>
+        }
+      </div>
+
+      <button class="btn-primary btn-lg" (click)="resetImport()">
+        Nueva importación
+      </button>
+    </div>
+  }
+
+</div>

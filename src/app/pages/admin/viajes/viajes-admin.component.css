@@ -1,0 +1,7 @@
+/* Shared styles live in styles.css */
+
+.ruta-cell { display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
+.ruta-arrow { color: var(--text-muted); }
+
+/* Wider modal for the viajes form */
+dialog.modal-wide { max-width: 640px; }

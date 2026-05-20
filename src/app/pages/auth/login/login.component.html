@@ -1,0 +1,83 @@
+<!-- login.component.html -->
+<!-- Contenedor centrado verticalmente en la pantalla -->
+<div class="login-container">
+
+  <div class="login-card">
+
+    <h1>Boletería Colectivos</h1>
+    <h2>Iniciar sesión</h2>
+
+    <!--
+      [formGroup] vincula este <form> con el FormGroup definido en el TypeScript.
+      (ngSubmit) llama a onSubmit() cuando el usuario hace click en Submit o presiona Enter.
+    -->
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+
+      <!-- CAMPO EMAIL -->
+      <div class="form-group">
+        <label for="email">Email</label>
+        <!--
+          formControlName vincula este input con el control "email" del FormGroup.
+          Angular maneja automáticamente el value, los cambios y el estado de validación.
+        -->
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          placeholder="admin@boleteria.com"
+          [class.error]="f['email'].invalid && f['email'].touched"
+        />
+        <!--
+          Mostramos el error solo si el campo fue "tocado" (el usuario interactuó con él).
+          Esto evita mostrar errores antes de que el usuario intente escribir algo.
+        -->
+        @if (f['email'].touched && f['email'].errors?.['required']) {
+          <span class="error-text">El email es obligatorio</span>
+        }
+        @if (f['email'].touched && f['email'].errors?.['email']) {
+          <span class="error-text">Ingresa un email válido</span>
+        }
+      </div>
+
+      <!-- CAMPO PASSWORD -->
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          placeholder="••••••••"
+          [class.error]="f['password'].invalid && f['password'].touched"
+        />
+        @if (f['password'].touched && f['password'].errors?.['required']) {
+          <span class="error-text">La contraseña es obligatoria</span>
+        }
+        @if (f['password'].touched && f['password'].errors?.['minlength']) {
+          <span class="error-text">Mínimo 8 caracteres</span>
+        }
+      </div>
+
+      <!-- MENSAJE DE ERROR GLOBAL (viene del servidor) -->
+      @if (errorMessage()) {
+        <div class="alert-error">{{ errorMessage() }}</div>
+      }
+
+      <!--
+        [disabled] deshabilita el botón mientras se espera respuesta del servidor.
+        Esto evita que el usuario envíe el formulario dos veces.
+      -->
+      <button type="submit" [disabled]="isLoading()">
+        @if (isLoading()) {
+          Ingresando...
+        } @else {
+          Ingresar
+        }
+      </button>
+
+    </form>
+
+
+
+  </div>
+
+</div>

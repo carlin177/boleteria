@@ -1,0 +1,130 @@
+:host {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.admin-shell {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+}
+
+/* ─── Sidebar ────────────────────────────────────────────────────────────── */
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: #1E1D1B;
+  color: #F0EDE7;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.sidebar-brand {
+  padding: 1.5rem 1.25rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.brand-icon { font-size: 1.5rem; }
+
+.brand-name {
+  display: block;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #F0EDE7;
+}
+
+.brand-sub {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 0.1rem;
+}
+
+/* ─── Nav ─────────────────────────────────────────────────────────────────── */
+.sidebar-nav { flex: 1; padding: 1rem 0; }
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1.25rem;
+  color: rgba(240, 237, 231, 0.55);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  transition: all 0.18s ease;
+}
+.nav-link:hover { color: #F0EDE7; background: rgba(255, 255, 255, 0.05); }
+.nav-link.active { color: var(--accent); border-left-color: var(--accent); background: rgba(232, 150, 26, 0.10); }
+.nav-icon { font-size: 1rem; }
+
+.nav-link-import {
+  margin-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 1rem;
+}
+
+.nav-link-home {
+  opacity: 0.7;
+}
+.nav-link-home:hover { opacity: 1; }
+
+/* ─── Footer ──────────────────────────────────────────────────────────────── */
+.sidebar-footer {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.user-info { margin-bottom: 0.75rem; }
+
+.user-name {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #F0EDE7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  display: block;
+  font-size: 0.72rem;
+  color: rgba(240, 237, 231, 0.50);
+  margin-top: 0.15rem;
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(240, 237, 231, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.18s ease;
+}
+.logout-btn:hover { background: rgba(255, 255, 255, 0.12); color: #F0EDE7; }
+
+/* ─── Main content ────────────────────────────────────────────────────────── */
+.admin-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  background: var(--bg);
+}

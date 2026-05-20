@@ -1,0 +1,202 @@
+<section class="page-section">
+
+  <div class="page-header">
+    <h1 class="page-title">Viajes</h1>
+    <button class="btn-primary" (click)="openCreate()">+ Nuevo viaje</button>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading">Cargando viajes...</div>
+  } @else if (errorMsg() && viajes().length === 0) {
+    <div class="error-msg">{{ errorMsg() }}</div>
+  } @else {
+
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Empresa</th>
+            <th>Ruta</th>
+            <th>Salida</th>
+            <th>Llegada</th>
+            <th>Tipo</th>
+            <th>Precio</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (v of viajes(); track v.id) {
+            <tr>
+              <td>{{ v.empresa?.nombre ?? getNombreEmpresa(v.empresa_id) }}</td>
+              <td class="ruta-cell">
+                <span>{{ v.ciudad_origen?.nombre ?? v.ciudad_origen_id }}</span>
+                <span class="ruta-arrow">→</span>
+                <span>{{ v.ciudad_destino?.nombre ?? v.ciudad_destino_id }}</span>
+              </td>
+              <td>{{ v.hora_salida.substring(0, 5) }}</td>
+              <td>{{ v.hora_llegada.substring(0, 5) }}</td>
+              <td>{{ v.tipo_servicio }}</td>
+              <td>${{ v.precio }}</td>
+              <td>
+                <span class="badge"
+                  [class.badge-active]="v.estado === 'activo'"
+                  [class.badge-inactive]="v.estado === 'inactivo'">
+                  {{ v.estado }}
+                </span>
+              </td>
+              <td class="actions">
+                <button class="btn-icon btn-edit"   (click)="openEdit(v)">Editar</button>
+                <button class="btn-icon btn-delete" (click)="delete(v)">Eliminar</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="8" class="empty-row">No hay viajes registrados.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    @if (lastPage() > 1) {
+      <div class="pagination">
+        <button class="btn-secondary" (click)="prevPage()" [disabled]="currentPage() === 1">← Anterior</button>
+        <span class="pagination-info">
+          Página {{ currentPage() }} de {{ lastPage() }} &nbsp;·&nbsp; {{ totalItems() }} viajes
+        </span>
+        <button class="btn-secondary" (click)="nextPage()" [disabled]="currentPage() === lastPage()">Siguiente →</button>
+      </div>
+    }
+
+  }
+
+</section>
+
+<!-- ── Modal crear / editar ──────────────────────────────────────────────── -->
+<dialog #dialog class="modal modal-wide">
+
+  <div class="modal-header">
+    <h2 class="modal-title">{{ editingId() ? 'Editar viaje' : 'Nuevo viaje' }}</h2>
+    <button class="modal-close" (click)="closeDialog()" aria-label="Cerrar">&times;</button>
+  </div>
+
+  <form #form="ngForm" (ngSubmit)="onSubmit(form)" class="modal-form" novalidate>
+
+    <!-- Empresa -->
+    <div class="form-group">
+      <label for="empresa_id">Empresa *</label>
+      <select id="empresa_id" name="empresa_id"
+        [(ngModel)]="formData.empresa_id" required
+        class="form-input">
+        <option [ngValue]="0" disabled>Seleccioná una empresa</option>
+        @for (e of empresas(); track e.id) {
+          <option [ngValue]="e.id">{{ e.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Origen / Destino -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="ciudad_origen_id">Ciudad origen *</label>
+        <select id="ciudad_origen_id" name="ciudad_origen_id"
+          [(ngModel)]="formData.ciudad_origen_id" required
+          class="form-input">
+          <option [ngValue]="0" disabled>Origen</option>
+          @for (c of ciudades(); track c.id) {
+            <option [ngValue]="c.id">{{ c.nombre }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="ciudad_destino_id">Ciudad destino *</label>
+        <select id="ciudad_destino_id" name="ciudad_destino_id"
+          [(ngModel)]="formData.ciudad_destino_id" required
+          class="form-input">
+          <option [ngValue]="0" disabled>Destino</option>
+          @for (c of ciudades(); track c.id) {
+            <option [ngValue]="c.id">{{ c.nombre }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <!-- Horarios -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="hora_salida">Hora salida *</label>
+        <input id="hora_salida" name="hora_salida" type="time"
+          [(ngModel)]="formData.hora_salida" required
+          class="form-input" />
+      </div>
+      <div class="form-group">
+        <label for="hora_llegada">Hora llegada *</label>
+        <input id="hora_llegada" name="hora_llegada" type="time"
+          [(ngModel)]="formData.hora_llegada" required
+          class="form-input" />
+      </div>
+    </div>
+
+    <!-- Tipo / Precio / Asientos -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="tipo_servicio">Tipo de servicio *</label>
+        <input id="tipo_servicio" name="tipo_servicio" type="text"
+          [(ngModel)]="formData.tipo_servicio" required
+          list="tipos-list"
+          class="form-input" placeholder="Ej: Común, Diferencial" />
+        <datalist id="tipos-list">
+          <option value="Común"></option>
+          <option value="Diferencial"></option>
+          <option value="Semicama"></option>
+          <option value="Cama ejecutivo"></option>
+        </datalist>
+      </div>
+      <div class="form-group">
+        <label for="precio">Precio *</label>
+        <input id="precio" name="precio" type="number"
+          [(ngModel)]="formData.precio" required min="0.01"
+          class="form-input" placeholder="0.00" step="0.01" />
+      </div>
+    </div>
+
+    <!-- Asientos / Estado -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="asientos_totales">Asientos totales</label>
+        <input id="asientos_totales" name="asientos_totales" type="number"
+          [(ngModel)]="formData.asientos_totales"
+          class="form-input" placeholder="Opcional" min="1" />
+      </div>
+      <div class="form-group">
+        <label for="estado">Estado</label>
+        <select id="estado" name="estado" [(ngModel)]="formData.estado" class="form-input">
+          <option value="activo">Activo</option>
+          <option value="inactivo">Inactivo</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Observaciones -->
+    <div class="form-group">
+      <label for="observaciones">Observaciones</label>
+      <textarea id="observaciones" name="observaciones"
+        [(ngModel)]="formData.observaciones"
+        class="form-input" rows="2"
+        placeholder="Opcional — info adicional para el pasajero"></textarea>
+    </div>
+
+    @if (errorMsg()) {
+      <div class="form-error">{{ errorMsg() }}</div>
+    }
+
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" (click)="closeDialog()">Cancelar</button>
+      <button type="submit" class="btn-primary"
+        [disabled]="isSaving() || form.invalid || formData.empresa_id === 0 || formData.ciudad_origen_id === 0 || formData.ciudad_destino_id === 0">
+        {{ isSaving() ? 'Guardando...' : (editingId() ? 'Actualizar' : 'Crear') }}
+      </button>
+    </div>
+
+  </form>
+</dialog>

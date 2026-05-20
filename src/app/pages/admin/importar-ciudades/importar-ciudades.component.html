@@ -1,0 +1,214 @@
+<div class="page-section import-page">
+
+  <!-- ─── Header ─────────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">🏙 Importar Ciudades</h1>
+      <p class="page-subtitle">Cargá múltiples ciudades de una sola vez pegando texto estructurado</p>
+    </div>
+  </div>
+
+  <!-- ─── Advertencia de catálogo ─────────────────────────────────────────────── -->
+  @if (loadError()) {
+    <div class="alert-warn">
+      <strong>Aviso:</strong> {{ loadError() }}
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <!-- FASE 1 — ENTRADA DE TEXTO                                                  -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  @if (importState() === 'idle') {
+
+    <div class="import-card">
+
+      <!-- Guía de formato -->
+      <div class="format-guide">
+        <p class="guide-title">Formato requerido — una ciudad por línea</p>
+        <code class="format-header">Nombre,Provincia</code>
+        <div class="example-lines">
+          <span>Goya,Corrientes</span>
+          <span>Corrientes,Corrientes</span>
+          <span>Resistencia,Chaco</span>
+          <span>Posadas,Misiones</span>
+          <span>Rosario,Santa Fe</span>
+        </div>
+        <p class="guide-hint">
+          Espacios alrededor de las comas son ignorados automáticamente.
+          El país se establece como <strong>Argentina</strong> por defecto.
+        </p>
+      </div>
+
+      <!-- Textarea principal -->
+      <textarea
+        class="import-textarea"
+        [(ngModel)]="rawText"
+        spellcheck="false"
+        autocomplete="off"
+        placeholder="Goya,Corrientes
+Corrientes,Corrientes
+Resistencia,Chaco
+Posadas,Misiones
+Rosario,Santa Fe"
+      ></textarea>
+
+      <div class="import-actions">
+        <button
+          class="btn-primary btn-lg"
+          (click)="previsualizar()"
+          [disabled]="!rawText.trim() || !catalogReady()"
+        >
+          @if (!catalogReady()) {
+            Cargando…
+          } @else {
+            Previsualizar ciudades →
+          }
+        </button>
+      </div>
+
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <!-- FASE 2 — PREVIEW                                                           -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  @if (importState() === 'previewing') {
+
+    <!-- Resumen de validación -->
+    <div class="preview-stats">
+      <div class="stat-badge stat-valid">
+        <span class="stat-icon">✓</span>
+        <span class="stat-num">{{ validCount() }}</span>
+        <span class="stat-label">{{ validCount() === 1 ? 'lista' : 'listas' }}</span>
+      </div>
+      @if (errorCount() > 0) {
+        <div class="stat-badge stat-invalid">
+          <span class="stat-icon">✗</span>
+          <span class="stat-num">{{ errorCount() }}</span>
+          <span class="stat-label">{{ errorCount() === 1 ? 'con error' : 'con errores' }}</span>
+        </div>
+      }
+      @if (warnCount() > 0) {
+        <div class="stat-badge stat-warn">
+          <span class="stat-icon">⚠</span>
+          <span class="stat-num">{{ warnCount() }}</span>
+          <span class="stat-label">{{ warnCount() === 1 ? 'ya existe' : 'ya existen' }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- Advertencia global si hay duplicados con BD -->
+    @if (warnCount() > 0) {
+      <div class="alert-warn alert-warn-sm">
+        {{ warnCount() }} {{ warnCount() === 1 ? 'ciudad ya existe' : 'ciudades ya existen' }}
+        en el sistema. Se importarán igual — el backend puede rechazarlas si tiene restricción de unicidad.
+      </div>
+    }
+
+    <!-- Grid de tarjetas -->
+    <div class="entries-grid">
+      @for (entry of entries(); track entry.lineNumber) {
+        <div
+          class="entry-card"
+          [class.entry-valid]="entry.fullyValid && !entry.yaExiste"
+          [class.entry-warn]="entry.fullyValid && entry.yaExiste"
+          [class.entry-invalid]="!entry.fullyValid"
+        >
+          <!-- Cabecera -->
+          <div class="entry-head">
+            <span class="line-num">Línea {{ entry.lineNumber }}</span>
+            <div class="chip-group">
+              @if (entry.fullyValid && entry.yaExiste) {
+                <span class="status-chip chip-warn">⚠ Ya existe</span>
+              }
+              @if (entry.fullyValid) {
+                <span class="status-chip chip-valid">✓ Lista</span>
+              } @else {
+                <span class="status-chip chip-invalid">✗ Error</span>
+              }
+            </div>
+          </div>
+
+          <!-- Datos -->
+          <div class="entry-data">
+            <div class="data-row">
+              <span class="data-label">Ciudad</span>
+              <span class="data-val">{{ entry.nombre || '—' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">Provincia</span>
+              <span class="data-val">{{ entry.provincia || '—' }}</span>
+            </div>
+            <div class="data-row">
+              <span class="data-label">País</span>
+              <span class="data-val data-muted">Argentina</span>
+            </div>
+          </div>
+
+          <!-- Errores -->
+          @if (entry.errors.length > 0) {
+            <ul class="error-list">
+              @for (err of entry.errors; track err) {
+                <li>{{ err }}</li>
+              }
+            </ul>
+          }
+
+        </div>
+      }
+    </div>
+
+    <!-- Acciones de confirmación -->
+    <div class="confirm-actions">
+      <button class="btn-secondary" (click)="resetImport()">← Volver a editar</button>
+      @if (validCount() > 0) {
+        <button class="btn-primary btn-lg" (click)="confirmarImportacion()">
+          Confirmar importación — {{ validCount() }} {{ validCount() === 1 ? 'ciudad' : 'ciudades' }}
+        </button>
+      }
+    </div>
+
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <!-- FASE 3 — IMPORTANDO                                                        -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  @if (importState() === 'importing') {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Importando ciudades al sistema…</p>
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <!-- FASE 4 — RESULTADO                                                         -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  @if (importState() === 'done') {
+    <div class="done-card">
+      <div class="done-icon">
+        {{ importResults().failed === 0 ? '🎉' : '⚠️' }}
+      </div>
+      <h2 class="done-title">
+        {{ importResults().failed === 0 ? 'Importación exitosa' : 'Importación completada' }}
+      </h2>
+
+      <div class="done-stats">
+        <div class="done-stat done-stat-success">
+          <strong>{{ importResults().success }}</strong>
+          <span>{{ importResults().success === 1 ? 'ciudad importada' : 'ciudades importadas' }}</span>
+        </div>
+        @if (importResults().failed > 0) {
+          <div class="done-stat done-stat-fail">
+            <strong>{{ importResults().failed }}</strong>
+            <span>{{ importResults().failed === 1 ? 'falló' : 'fallaron' }}</span>
+          </div>
+        }
+      </div>
+
+      <button class="btn-primary btn-lg" (click)="resetImport()">
+        Nueva importación
+      </button>
+    </div>
+  }
+
+</div>

@@ -1,0 +1,52 @@
+<div class="admin-shell">
+
+  <!-- ── Sidebar ──────────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+
+    <div class="sidebar-brand">
+      <a routerLink="/" class="brand-link">
+        <span class="brand-icon">🚌</span>
+        <div>
+          <span class="brand-name">Boletería</span>
+          <span class="brand-sub">Panel Admin</span>
+        </div>
+      </a>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a routerLink="/admin/viajes"   routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">🗓</span> Viajes
+      </a>
+      <a routerLink="/admin/empresas" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">🏢</span> Empresas
+      </a>
+      <a routerLink="/admin/ciudades" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">📍</span> Ciudades
+      </a>
+      <a routerLink="/admin/importar" routerLinkActive="active" class="nav-link nav-link-import">
+        <span class="nav-icon">⚡</span> Import. Viajes
+      </a>
+      <a routerLink="/admin/importar-ciudades" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">🏙</span> Import. Ciudades
+      </a>
+      <a routerLink="/" class="nav-link nav-link-home">
+        <span class="nav-icon">🏠</span> Pantalla principal
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <span class="user-name">{{ auth.currentUser()?.name }}</span>
+        <span class="user-role">Administrador</span>
+      </div>
+      <button class="logout-btn" (click)="auth.logout()">Cerrar sesión</button>
+    </div>
+
+  </aside>
+
+  <!-- ── Contenido ──────────────────────────────────────────────────────── -->
+  <main class="admin-main">
+    <router-outlet />
+  </main>
+
+</div>

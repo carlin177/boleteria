@@ -1,0 +1,129 @@
+<section class="page-section">
+
+  <div class="page-header">
+    <h1 class="page-title">Empresas</h1>
+    <button class="btn-primary" (click)="openCreate()">+ Nueva empresa</button>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading">Cargando empresas...</div>
+  } @else if (errorMsg() && empresas().length === 0) {
+    <div class="error-msg">{{ errorMsg() }}</div>
+  } @else {
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Zona</th>
+            <th>Nombre</th>
+            <th>Teléfono</th>
+            <th>Email</th>
+            <th>Sitio web</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (e of empresas(); track e.id) {
+            <tr>
+              <td class="text-center"><strong>#{{ e.id }}</strong></td>
+              <td><strong>{{ e.nombre }}</strong></td>
+              <td>{{ e.telefono || '—' }}</td>
+              <td>{{ e.email || '—' }}</td>
+              <td>
+                @if (e.sitio_web) {
+                  <a [href]="e.sitio_web" target="_blank" rel="noopener noreferrer">{{ e.sitio_web }}</a>
+                } @else { — }
+              </td>
+              <td>
+                <span class="badge"
+                  [class.badge-active]="e.estado === 'activo'"
+                  [class.badge-inactive]="e.estado === 'inactivo'">
+                  {{ e.estado }}
+                </span>
+              </td>
+              <td class="actions">
+                <button class="btn-icon btn-edit"   (click)="openEdit(e)">Editar</button>
+                <button class="btn-icon btn-delete" (click)="delete(e)">Eliminar</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="empty-row">No hay empresas registradas.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+</section>
+
+<!-- ── Modal crear / editar ──────────────────────────────────────────────── -->
+<dialog #dialog class="modal">
+
+  <div class="modal-header">
+    <h2 class="modal-title">{{ editingId() ? 'Editar empresa' : 'Nueva empresa' }}</h2>
+    <button class="modal-close" (click)="closeDialog()" aria-label="Cerrar">&times;</button>
+  </div>
+
+  <form #form="ngForm" (ngSubmit)="onSubmit(form)" class="modal-form" novalidate>
+
+    @if (!editingId()) {
+      <div class="form-group">
+        <label for="zona_id">Zona de ventanilla (1-5) *</label>
+        <input id="zona_id" name="zona_id" type="number"
+          [(ngModel)]="formData.id" required min="1" max="5"
+          class="form-input" placeholder="1 = izquierda … 5 = derecha" />
+        <small class="field-hint">Determina en qué ventanilla física aparece esta empresa.</small>
+      </div>
+    }
+
+    <div class="form-group">
+      <label for="nombre">Nombre *</label>
+      <input id="nombre" name="nombre" type="text"
+        [(ngModel)]="formData.nombre" required
+        class="form-input" placeholder="Nombre de la empresa" />
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="telefono">Teléfono</label>
+        <input id="telefono" name="telefono" type="text"
+          [(ngModel)]="formData.telefono"
+          class="form-input" placeholder="+54 11 1234-5678" />
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email"
+          [(ngModel)]="formData.email"
+          class="form-input" placeholder="info@empresa.com" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="sitio_web">Sitio web</label>
+      <input id="sitio_web" name="sitio_web" type="text"
+        [(ngModel)]="formData.sitio_web"
+        class="form-input" placeholder="https://empresa.com" />
+    </div>
+
+    <div class="form-group">
+      <label for="estado">Estado</label>
+      <select id="estado" name="estado" [(ngModel)]="formData.estado" class="form-input">
+        <option value="activo">Activo</option>
+        <option value="inactivo">Inactivo</option>
+      </select>
+    </div>
+
+    @if (errorMsg()) {
+      <div class="form-error">{{ errorMsg() }}</div>
+    }
+
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" (click)="closeDialog()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="isSaving() || form.invalid">
+        {{ isSaving() ? 'Guardando...' : (editingId() ? 'Actualizar' : 'Crear') }}
+      </button>
+    </div>
+
+  </form>
+</dialog>

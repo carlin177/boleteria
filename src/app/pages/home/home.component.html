@@ -1,0 +1,249 @@
+<div class="app-shell">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-inner">
+
+      <a class="brand" routerLink="/" aria-label="Inicio">
+        <span class="brand-icon" aria-hidden="true">🚌</span>
+        <span class="brand-text">Boletería <strong>Goya</strong></span>
+      </a>
+
+      <nav class="header-nav" aria-label="Navegación de usuario">
+        @if (auth.isAuthenticated()) {
+          <span class="header-user">{{ auth.currentUser()?.name }}</span>
+          @if (auth.isAdmin()) {
+            <a class="btn-header" routerLink="/admin">Panel admin</a>
+            <button
+              class="btn-header btn-editor-toggle"
+              [class.btn-editor-toggle--on]="editorMode()"
+              type="button"
+              (click)="toggleEditorMode()"
+              title="Activar modo editor de zonas de ventanilla"
+            >{{ editorMode() ? 'Salir editor' : 'Editor zonas' }}</button>
+          }
+          <button class="btn-header btn-logout" type="button" (click)="auth.logout()">
+            Salir
+          </button>
+        } @else {
+          <a class="btn-header btn-login" routerLink="/login">Ingresar</a>
+        }
+      </nav>
+
+    </div>
+  </header>
+
+  <main class="app-main">
+
+    <!-- TERMINAL SECTION -->
+    <section class="terminal-section" aria-label="Ventanillas de la terminal">
+      <div class="terminal-wrapper" #terminalWrapper [class.editor-active]="editorMode()">
+
+        <img
+          src="/terminalgoya.png"
+          alt="Ventanillas de la Terminal de Ómnibus de Goya, Corrientes"
+          class="terminal-img"
+          draggable="false"
+        />
+
+        @if (!isLoadingEmpresas() && empresasActivas().length > 0) {
+          @for (empresa of empresasActivas(); track empresa.id) {
+            @let zone = zonesMap().get(empresa.id);
+            @if (zone) {
+              <div
+                class="ventanilla-zona"
+                role="button"
+                tabindex="0"
+                [class.active]="!editorMode() && activeEmpresaId() === empresa.id"
+                [class.editor-zone]="editorMode()"
+                [class.editor-selected]="editorMode() && selectedZoneId() === empresa.id"
+                [attr.aria-expanded]="editorMode() ? null : activeEmpresaId() === empresa.id"
+                [attr.aria-label]="editorMode() ? ('Zona ' + empresa.id + ': ' + empresa.nombre) : ('Ver viajes de ' + empresa.nombre)"
+                [style.top.%]="zone.top"
+                [style.left.%]="zone.left"
+                [style.width.%]="zone.width"
+                [style.height.%]="zone.height"
+                (mousedown)="editorMode() && startDrag($event, empresa.id)"
+                (click)="editorMode() || toggleVentanilla(empresa.id)"
+                (keydown.enter)="editorMode() || toggleVentanilla(empresa.id)"
+                (keydown.space)="$event.preventDefault(); editorMode() || toggleVentanilla(empresa.id)"
+              >
+                @if (!editorMode()) {
+                  <span class="ventanilla-num" aria-hidden="true">0{{ empresa.id }}</span>
+                  <div class="ventanilla-chip" aria-hidden="true">
+                    <span class="ventanilla-nombre">{{ empresa.nombre }}</span>
+                    <span class="ventanilla-cta">ver viajes</span>
+                  </div>
+                } @else {
+                  <div class="editor-zone-label" aria-hidden="true">
+                    <span class="editor-zone-num">{{ empresa.id }}</span>
+                    <span class="editor-zone-name">{{ empresa.nombre }}</span>
+                  </div>
+                  <div class="resize-handle resize-nw" (mousedown)="startResize($event, empresa.id, 'nw')"></div>
+                  <div class="resize-handle resize-ne" (mousedown)="startResize($event, empresa.id, 'ne')"></div>
+                  <div class="resize-handle resize-sw" (mousedown)="startResize($event, empresa.id, 'sw')"></div>
+                  <div class="resize-handle resize-se" (mousedown)="startResize($event, empresa.id, 'se')"></div>
+                }
+              </div>
+            }
+          }
+        }
+
+        @if (isLoadingEmpresas()) {
+          <div class="overlay-loading" aria-live="polite">
+            <span class="spinner" aria-hidden="true"></span>
+            Cargando empresas...
+          </div>
+        }
+
+        @if (editorMode()) {
+          <div class="editor-toolbar" role="toolbar" aria-label="Editor de zonas">
+            <div class="editor-toolbar-info">
+              @let selId = selectedZoneId();
+              @if (selId !== null) {
+                @let selZone = zonesMap().get(selId);
+                @if (selZone) {
+                  <code class="editor-coord">T:{{ selZone.top.toFixed(1) }}%</code>
+                  <code class="editor-coord">L:{{ selZone.left.toFixed(1) }}%</code>
+                  <code class="editor-coord">W:{{ selZone.width.toFixed(1) }}%</code>
+                  <code class="editor-coord">H:{{ selZone.height.toFixed(1) }}%</code>
+                }
+              } @else {
+                <span class="editor-hint">Arrastrá para mover · Esquinas para redimensionar</span>
+              }
+            </div>
+            <div class="editor-toolbar-actions">
+              @if (savedMessage()) {
+                <span class="editor-saved">✓ Guardado</span>
+              }
+              <button class="editor-btn editor-btn--reset" type="button" (click)="resetZones()">Restaurar</button>
+              <button class="editor-btn editor-btn--save"  type="button" (click)="saveZones()">Guardar</button>
+            </div>
+          </div>
+        }
+
+        <div class="hero-bottom" aria-hidden="true">
+          <span class="hero-location">Terminal de Ómnibus · Goya, Corrientes</span>
+          <span class="hero-hint">Seleccioná una ventanilla para ver los viajes</span>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="home-content">
+
+    <!-- BUSCADOR -->
+    <section class="buscador-section" aria-label="Buscador de viajes">
+      <div class="buscador-inner">
+        <h2 class="buscador-titulo">¿A dónde vas?</h2>
+        <div class="buscador-controles">
+
+          <div class="campo">
+            <label for="origen">Desde</label>
+            <select id="origen" (change)="onOrigenChange($event)">
+              <option value="">Cualquier origen</option>
+              @for (ciudad of ciudadesActivas(); track ciudad.id) {
+                <option [value]="ciudad.id">{{ ciudad.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <span class="campo-flecha" aria-hidden="true">→</span>
+
+          <div class="campo">
+            <label for="destino">Hasta</label>
+            <select id="destino" (change)="onDestinoChange($event)">
+              <option value="">Cualquier destino</option>
+              @for (ciudad of ciudadesActivas(); track ciudad.id) {
+                <option [value]="ciudad.id">{{ ciudad.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          @if (hayFiltros()) {
+            <button class="btn-limpiar" type="button" (click)="limpiarFiltros()">
+              ✕ Limpiar
+            </button>
+          }
+
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL DE VIAJES -->
+    @if (panelVisible()) {
+      <section class="viajes-panel" aria-live="polite" aria-label="Viajes disponibles">
+
+        <div class="panel-header">
+          <h2 class="panel-titulo">{{ panelTitulo() }}</h2>
+          @if (!isLoadingViajes() && !errorViajes() && viajes().length > 0) {
+            <span class="panel-badge">
+              {{ viajes().length }} viaje{{ viajes().length !== 1 ? 's' : '' }}
+            </span>
+          }
+        </div>
+
+        @if (isLoadingViajes()) {
+          <div class="estado-loading">
+            <span class="spinner" aria-hidden="true"></span>
+            Buscando viajes...
+          </div>
+        } @else if (errorViajes()) {
+          <p class="estado-error" role="alert">{{ errorViajes() }}</p>
+        } @else if (viajes().length === 0) {
+          <div class="estado-vacio">
+            <span aria-hidden="true">🚏</span>
+            <p>No se encontraron viajes disponibles.</p>
+          </div>
+        } @else {
+          <div class="viajes-grid">
+            @for (viaje of viajes(); track viaje.id) {
+              <a
+                class="viaje-card"
+                [routerLink]="['/viajes', viaje.id]"
+                [attr.aria-label]="'Ver viaje de ' + getNombreCiudad(viaje.ciudad_origen_id) + ' a ' + getNombreCiudad(viaje.ciudad_destino_id)"
+              >
+                <div class="card-top">
+                  @if (viaje.empresa) {
+                    <span class="empresa-tag">{{ viaje.empresa.nombre }}</span>
+                  }
+                  <span class="servicio-badge">{{ viaje.tipo_servicio }}</span>
+                </div>
+
+                <div class="card-ruta">
+                  <div class="ciudad-bloque">
+                    <time class="ruta-hora" [attr.datetime]="viaje.hora_salida">{{ formatHora(viaje.hora_salida) }}</time>
+                    <span class="ciudad-nombre">{{ getNombreCiudad(viaje.ciudad_origen_id) }}</span>
+                    <span class="ciudad-etiqueta">Origen</span>
+                  </div>
+                  <div class="ruta-conector" aria-hidden="true">
+                    <span class="ruta-linea"></span>
+                    <span class="ruta-icono">→</span>
+                    <span class="ruta-linea"></span>
+                  </div>
+                  <div class="ciudad-bloque ciudad-bloque--der">
+                    <time class="ruta-hora" [attr.datetime]="viaje.hora_llegada">{{ formatHora(viaje.hora_llegada) }}</time>
+                    <span class="ciudad-nombre">{{ getNombreCiudad(viaje.ciudad_destino_id) }}</span>
+                    <span class="ciudad-etiqueta">Destino</span>
+                  </div>
+                </div>
+
+                <div class="card-tear" aria-hidden="true"></div>
+
+                <div class="card-footer">
+                  <span class="precio-etiqueta">precio</span>
+                  <span class="precio">{{ formatPrecio(viaje.precio) }}</span>
+                </div>
+              </a>
+            }
+          </div>
+        }
+
+      </section>
+    }
+
+    </div><!-- /.home-content -->
+
+  </main>
+
+</div>

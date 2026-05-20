@@ -1,0 +1,105 @@
+<section class="page-section">
+
+  <div class="page-header">
+    <h1 class="page-title">Ciudades</h1>
+    <button class="btn-primary" (click)="openCreate()">+ Nueva ciudad</button>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading">Cargando ciudades...</div>
+  } @else if (errorMsg() && ciudades().length === 0) {
+    <div class="error-msg">{{ errorMsg() }}</div>
+  } @else {
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Provincia</th>
+            <th>País</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of ciudades(); track c.id) {
+            <tr>
+              <td><strong>{{ c.nombre }}</strong></td>
+              <td>{{ c.provincia || '—' }}</td>
+              <td>{{ c.pais }}</td>
+              <td>
+                <span class="badge"
+                  [class.badge-active]="c.estado === 'activo'"
+                  [class.badge-inactive]="c.estado === 'inactivo'">
+                  {{ c.estado }}
+                </span>
+              </td>
+              <td class="actions">
+                <button class="btn-icon btn-edit"   (click)="openEdit(c)">Editar</button>
+                <button class="btn-icon btn-delete" (click)="delete(c)">Eliminar</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="empty-row">No hay ciudades registradas.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+</section>
+
+<!-- ── Modal crear / editar ──────────────────────────────────────────────── -->
+<dialog #dialog class="modal">
+
+  <div class="modal-header">
+    <h2 class="modal-title">{{ editingId() ? 'Editar ciudad' : 'Nueva ciudad' }}</h2>
+    <button class="modal-close" (click)="closeDialog()" aria-label="Cerrar">&times;</button>
+  </div>
+
+  <form #form="ngForm" (ngSubmit)="onSubmit(form)" class="modal-form" novalidate>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="nombre">Nombre *</label>
+        <input id="nombre" name="nombre" type="text"
+          [(ngModel)]="formData.nombre" required
+          class="form-input" placeholder="Ej: Corrientes" />
+      </div>
+      <div class="form-group">
+        <label for="provincia">Provincia</label>
+        <input id="provincia" name="provincia" type="text"
+          [(ngModel)]="formData.provincia"
+          class="form-input" placeholder="Ej: Corrientes" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="pais">País *</label>
+        <input id="pais" name="pais" type="text"
+          [(ngModel)]="formData.pais" required
+          class="form-input" placeholder="Argentina" />
+      </div>
+      <div class="form-group">
+        <label for="estado">Estado</label>
+        <select id="estado" name="estado" [(ngModel)]="formData.estado" class="form-input">
+          <option value="activo">Activo</option>
+          <option value="inactivo">Inactivo</option>
+        </select>
+      </div>
+    </div>
+
+    @if (errorMsg()) {
+      <div class="form-error">{{ errorMsg() }}</div>
+    }
+
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" (click)="closeDialog()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="isSaving() || form.invalid">
+        {{ isSaving() ? 'Guardando...' : (editingId() ? 'Actualizar' : 'Crear') }}
+      </button>
+    </div>
+
+  </form>
+</dialog>
