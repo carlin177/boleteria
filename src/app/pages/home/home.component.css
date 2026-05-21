@@ -1255,6 +1255,26 @@
 
   pointer-events: auto;
   animation: searchModuleIn 0.72s cubic-bezier(0.16, 1, 0.3, 1) 0.10s both;
+  /* Animación dedicada — se reemplaza por searchModuleOut al agregar --exit */
+}
+
+/* Salida: desliza a la izquierda y desaparece */
+.search-module--exit {
+  animation: searchModuleOut 0.42s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+  pointer-events: none;
+}
+
+@keyframes searchModuleOut {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(calc(-50% - 100px), -50%);
+    filter: blur(4px);
+  }
 }
 
 @keyframes searchModuleIn {
@@ -1478,5 +1498,343 @@
     width: 100%;
     justify-content: center;
     padding: 0.88rem;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   PANEL DE RESULTADOS
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.resultados-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: min(400px, 36%);
+  z-index: 5;
+
+  display: flex;
+  flex-direction: column;
+
+  background: rgba(10, 9, 8, 0.82);
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+
+  transform: translateX(105%);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 0.52s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity   0.40s ease;
+
+  overflow: hidden;
+}
+
+.resultados-panel--visible {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Encabezado del panel ───────────────────────────────────────────── */
+
+.panel-rp-header {
+  padding: 1.5rem 1.5rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.btn-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: none;
+  color: rgba(240, 237, 231, 0.40);
+  font-size: 0.75rem;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 1rem;
+  transition: color 0.2s;
+}
+
+.btn-volver:hover { color: var(--accent); }
+
+.panel-destino-label {
+  display: block;
+  font-size: 0.6rem;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: rgba(232, 150, 26, 0.60);
+  margin-bottom: 0.2rem;
+}
+
+.panel-destino-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.btn-clear-destino {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(240, 237, 231, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 50%;
+  color: rgba(240, 237, 231, 0.40);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+}
+
+.btn-clear-destino:hover {
+  background: rgba(232, 150, 26, 0.18);
+  border-color: rgba(232, 150, 26, 0.30);
+  color: var(--accent);
+}
+
+.panel-destino-nombre {
+  display: block;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.45rem;
+  font-weight: 500;
+  color: #F0EDE7;
+  letter-spacing: -0.3px;
+}
+
+/* ── Selector de días ───────────────────────────────────────────────── */
+
+.dias-selector {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.9rem 1.5rem;
+  overflow-x: auto;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  scrollbar-width: none;
+}
+
+.dias-selector::-webkit-scrollbar { display: none; }
+
+.dia-chip {
+  flex-shrink: 0;
+  padding: 0.4rem 0.85rem;
+  background: rgba(240, 237, 231, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 20px;
+  color: rgba(240, 237, 231, 0.50);
+  font-size: 0.73rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+}
+
+.dia-chip:hover {
+  background: rgba(240, 237, 231, 0.10);
+  color: rgba(240, 237, 231, 0.85);
+}
+
+.dia-chip--activo {
+  background: rgba(232, 150, 26, 0.15);
+  border-color: rgba(232, 150, 26, 0.38);
+  color: var(--accent);
+}
+
+/* ── Lista de viajes ─────────────────────────────────────────────────── */
+
+.panel-viajes-lista {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem 1rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+.panel-estado {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 2rem;
+  color: rgba(240, 237, 231, 0.35);
+  font-size: 0.82rem;
+}
+
+.panel-estado--vacio span[aria-hidden] {
+  font-size: 1.8rem;
+}
+
+/* ── Card de viaje ──────────────────────────────────────────────────── */
+
+.panel-viaje-card {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.85rem 0.9rem;
+  background: rgba(240, 237, 231, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, transform 0.18s;
+}
+
+.panel-viaje-card:hover {
+  background: rgba(240, 237, 231, 0.09);
+  border-color: rgba(232, 150, 26, 0.20);
+  transform: translateX(-2px);
+}
+
+.pvc-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 85px;
+}
+
+.pvc-empresa {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #F0EDE7;
+}
+
+.pvc-servicio {
+  font-size: 0.63rem;
+  color: rgba(240, 237, 231, 0.38);
+}
+
+.pvc-horario {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.pvc-tiempo {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+}
+
+.pvc-hora {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #F0EDE7;
+  letter-spacing: 0.2px;
+}
+
+.pvc-linea {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.11);
+  position: relative;
+}
+
+.pvc-linea::after {
+  content: '';
+  position: absolute;
+  right: -3px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid rgba(255, 255, 255, 0.18);
+  border-top:   1.5px solid rgba(255, 255, 255, 0.18);
+  transform: rotate(45deg);
+}
+
+.pvc-ruta {
+  font-size: 0.68rem;
+  color: rgba(240, 237, 231, 0.38);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  margin-top: 0.1rem;
+}
+
+.pvc-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+}
+
+.pvc-precio {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.pvc-badges {
+  display: flex;
+  gap: 0.2rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.pvc-badge {
+  font-size: 0.58rem;
+  padding: 0.12rem 0.38rem;
+  border-radius: 4px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pvc-badge--eco {
+  background: rgba(21, 128, 61, 0.20);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.18);
+}
+
+.pvc-badge--fast {
+  background: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+  border: 1px solid rgba(250, 204, 21, 0.18);
+}
+
+.pvc-badge--cama {
+  background: rgba(109, 40, 217, 0.20);
+  color: #c084fc;
+  border: 1px solid rgba(192, 132, 252, 0.18);
+}
+
+/* ── Responsive del panel ───────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .resultados-panel {
+    width: min(340px, 50%);
+  }
+}
+
+@media (max-width: 640px) {
+  .resultados-panel {
+    width: 100%;
+    height: 62%;
+    top: auto;
+    bottom: 0;
+    right: 0;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    transform: translateY(105%);
+  }
+
+  .resultados-panel--visible {
+    transform: translateY(0);
+  }
+
+  .panel-destino-nombre {
+    font-size: 1.2rem;
   }
 }

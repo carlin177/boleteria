@@ -29,6 +29,33 @@ const DEFAULT_ZONES: VentanillaZone[] = [
 
 const OVERLAY_STORAGE_KEY = 'boleteria_overlay_zones_v1';
 
+// ── Tipos del flujo de búsqueda guiada ─────────────────────────────────────
+export interface DiaDisponible {
+  fecha:     Date;
+  label:     string;   // "Jue 22"
+  labelFull: string;   // "Jueves 22 de mayo"
+}
+
+export interface ViajePanel {
+  empresa:      string;
+  origen:       string;
+  destino:      string;
+  horaSalida:   string;
+  horaLlegada:  string;
+  tipoServicio: string;
+  precio:       number;
+  badges:       Array<'economico' | 'sale-antes' | 'cama'>;
+}
+
+// ── Mock de viajes — temporal, preparado para conectar con API real ─────────
+const MOCK_VIAJES_PANEL: ViajePanel[] = [
+  { empresa: 'Flecha Bus',      origen: 'Goya', destino: 'Corrientes', horaSalida: '07:30', horaLlegada: '10:15', tipoServicio: 'Común',    precio: 4200, badges: ['economico'] },
+  { empresa: 'Río Uruguay',     origen: 'Goya', destino: 'Corrientes', horaSalida: '09:00', horaLlegada: '11:30', tipoServicio: 'Semi Cama', precio: 5800, badges: ['sale-antes'] },
+  { empresa: 'El Rápido',       origen: 'Goya', destino: 'Corrientes', horaSalida: '12:45', horaLlegada: '15:20', tipoServicio: 'Cama',      precio: 7900, badges: ['cama'] },
+  { empresa: 'Flecha Bus',      origen: 'Goya', destino: 'Corrientes', horaSalida: '16:00', horaLlegada: '18:45', tipoServicio: 'Común',    precio: 4200, badges: ['economico'] },
+  { empresa: 'Costera Criolla', origen: 'Goya', destino: 'Corrientes', horaSalida: '20:30', horaLlegada: '23:10', tipoServicio: 'Semi Cama', precio: 5500, badges: [] },
+];
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -46,7 +73,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   protected readonly auth  = inject(AuthService);
   protected readonly theme = inject(ThemeService);
   // Referencia al contenedor de la terminal (para cálculo de % en el editor)
-  @ViewChild('terminalWrapper') private readonly terminalWrapperRef!: ElementRef<HTMLElement>;
+  @ViewChild('terminalWrapper')  private readonly terminalWrapperRef!: ElementRef<HTMLElement>;
+  @ViewChild('searchInputEl')    private readonly searchInputEl?: ElementRef<HTMLInputElement>;
   // ── Estado ──────────────────────────────────────────────────────────────────
   readonly empresas  = signal<Empresa[]>([]);
   readonly ciudades  = signal<Ciudad[]>([]);
@@ -107,12 +135,75 @@ export class HomeComponent implements OnInit, OnDestroy {
   readonly selectedZoneId = signal<number | null>(null);
   readonly savedMessage   = signal(false);
 
+  // ── Estado del flujo de búsqueda guiada ──────────────────────────────────
+  readonly searchQuery          = signal('');
+  readonly destinoSeleccionado  = signal('');
+  readonly resultadosVisible    = signal(false);
+  readonly diaSeleccionadoIndex = signal(0);
+
   /** Map indexado por empresaId — consumido directamente por el template */
   readonly zonesMap = computed(() => {
     const m = new Map<number, VentanillaZone>();
     for (const z of this.overlayZones()) m.set(z.empresaId, z);
     return m;
   });
+
+  /** Próximos 7 días — preparado para conectar con API por fecha */
+  readonly diasDisponibles = computed((): DiaDisponible[] => {
+    const DC = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const DF = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const MF = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const hoy = new Date();
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(hoy);
+      d.setDate(hoy.getDate() + i);
+      return {
+        fecha:     d,
+        label:     `${DC[d.getDay()]} ${d.getDate()}`,
+        labelFull: `${DF[d.getDay()]} ${d.getDate()} de ${MF[d.getMonth()]}`,
+      };
+    });
+  });
+
+  /** Viajes del panel — datos reales en modo ventanilla, mock en modo búsqueda */
+  readonly viajesPanel = computed((): ViajePanel[] => {
+    if (this.activeEmpresaId() !== null) {
+      const viajesReales = this.viajes();
+      if (!viajesReales.length) return [];
+
+      const toMin = (h: string) => {
+        const p = h.split(':');
+        return parseInt(p[0]) * 60 + parseInt(p[1]);
+      };
+      const precios  = viajesReales.map(v => parseFloat(v.precio));
+      const salidas  = viajesReales.map(v => toMin(v.hora_salida));
+      const minPrecio = Math.min(...precios);
+      const minSalida = Math.min(...salidas);
+
+      return viajesReales.map(v => ({
+        empresa:      v.empresa?.nombre ?? this.empresas().find(e => e.id === v.empresa_id)?.nombre ?? '—',
+        origen:       v.ciudad_origen?.nombre  ?? this.getNombreCiudad(v.ciudad_origen_id),
+        destino:      v.ciudad_destino?.nombre ?? this.getNombreCiudad(v.ciudad_destino_id),
+        horaSalida:   this.formatHora(v.hora_salida),
+        horaLlegada:  this.formatHora(v.hora_llegada),
+        tipoServicio: v.tipo_servicio,
+        precio:       parseFloat(v.precio),
+        badges: [
+          ...(parseFloat(v.precio) === minPrecio              ? ['economico'  as const] : []),
+          ...(toMin(v.hora_salida) === minSalida              ? ['sale-antes' as const] : []),
+          ...(v.tipo_servicio.toLowerCase().includes('cama') ? ['cama'       as const] : []),
+        ],
+      }));
+    }
+    // Future: filter MOCK_VIAJES_PANEL by destinoSeleccionado() + día seleccionado
+    return MOCK_VIAJES_PANEL;
+  });
+
+  /** Etiqueta del subtitulo del panel según el modo activo */
+  readonly panelSubtitulo = computed(() =>
+    this.activeEmpresaId() !== null ? 'Viajes de' : 'Viajes hacia'
+  );
 
   // Estado de drag/resize — no necesita ser reactivo
   private dragState = {
@@ -148,8 +239,19 @@ export class HomeComponent implements OnInit, OnDestroy {
    */
   toggleVentanilla(empresaId: number): void {
     const misma = this.activeEmpresaId() === empresaId;
-    this.activeEmpresaId.set(misma ? null : empresaId);
-    this.cargarViajes();
+    if (misma) {
+      this.activeEmpresaId.set(null);
+      this.viajes.set([]);
+      this.resultadosVisible.set(false);
+      this.destinoSeleccionado.set('');
+    } else {
+      this.activeEmpresaId.set(empresaId);
+      const nombre = this.empresas().find(e => e.id === empresaId)?.nombre ?? 'Empresa';
+      this.destinoSeleccionado.set(nombre);
+      this.resultadosVisible.set(true);
+      this.diaSeleccionadoIndex.set(0);
+      this.cargarViajes();
+    }
   }
 
   onOrigenChange(event: Event): void {
@@ -168,6 +270,42 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.filtroOrigenId.set(null);
     this.filtroDestinoId.set(null);
     this.cargarViajes();
+  }
+
+  // ── Flujo de búsqueda guiada ────────────────────────────────────────────────
+
+  onSearchInput(event: Event): void {
+    this.searchQuery.set((event.target as HTMLInputElement).value);
+  }
+
+  onBuscar(): void {
+    const query = this.searchQuery().trim();
+    if (!query) return;
+    this.destinoSeleccionado.set(query);
+    this.resultadosVisible.set(true);
+    this.diaSeleccionadoIndex.set(0);
+  }
+
+  onVolver(): void {
+    this.resultadosVisible.set(false);
+    this.activeEmpresaId.set(null);
+    this.viajes.set([]);
+  }
+
+  onLimpiarBusqueda(): void {
+    this.searchQuery.set('');
+    this.destinoSeleccionado.set('');
+    this.resultadosVisible.set(false);
+    this.activeEmpresaId.set(null);
+    this.viajes.set([]);
+    if (this.searchInputEl?.nativeElement) {
+      this.searchInputEl.nativeElement.value = '';
+      this.searchInputEl.nativeElement.focus();
+    }
+  }
+
+  selectDia(index: number): void {
+    this.diaSeleccionadoIndex.set(index);
   }
 
   // ── Overlay Editor ─────────────────────────────────────────────────────────

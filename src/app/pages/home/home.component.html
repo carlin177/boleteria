@@ -131,7 +131,8 @@
 
         @if (!editorMode()) {
           <!-- ── MÓDULO DE BÚSQUEDA PRINCIPAL ──────────────────────────────── -->
-          <div class="search-module" role="search" aria-label="Búsqueda de destino">
+          <div class="search-module" role="search" aria-label="Búsqueda de destino"
+               [class.search-module--exit]="resultadosVisible()">
 
             <p class="search-kicker" aria-hidden="true">Terminal de Ómnibus · Goya</p>
             <h1 class="search-headline">¿A dónde querés viajar?</h1>
@@ -151,6 +152,10 @@
                   aria-label="Ingresá el destino de tu viaje"
                   autocomplete="off"
                   spellcheck="false"
+                  [value]="searchQuery()"
+                  (input)="onSearchInput($event)"
+                  (keydown.enter)="onBuscar()"
+                  #searchInputEl
                 />
                 <button
                   type="button"
@@ -167,7 +172,7 @@
                 </button>
               </div>
 
-              <button type="button" class="btn-continuar">
+              <button type="button" class="btn-continuar" (click)="onBuscar()">
                 <span>Continuar</span>
                 <span class="btn-continuar-arrow" aria-hidden="true">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -177,6 +182,107 @@
                 </span>
               </button>
 
+            </div>
+
+          </div>
+
+          <!-- ── PANEL DE RESULTADOS ──────────────────────────────────────────────── -->
+          <div class="resultados-panel"
+               [class.resultados-panel--visible]="resultadosVisible()"
+               role="region"
+               aria-label="Resultados de viajes">
+
+            <!-- Encabezado -->
+            <div class="panel-rp-header">
+              <button class="btn-volver" type="button" (click)="onVolver()" aria-label="Volver al buscador">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="19" y1="12" x2="5" y2="12"/>
+                  <polyline points="12 19 5 12 12 5"/>
+                </svg>
+                <span>Cambiar destino</span>
+              </button>
+              <div class="panel-destino-info">
+                <span class="panel-destino-label">{{ panelSubtitulo() }}</span>
+                <div class="panel-destino-row">
+                  <strong class="panel-destino-nombre">{{ destinoSeleccionado() }}</strong>
+                  <button
+                    type="button"
+                    class="btn-clear-destino"
+                    (click)="onLimpiarBusqueda()"
+                    aria-label="Cambiar destino"
+                    title="Cambiar destino"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Selector de días -->
+            <div class="dias-selector" role="tablist" aria-label="Seleccionar día de viaje">
+              @for (dia of diasDisponibles(); track dia.label; let i = $index) {
+                <button
+                  class="dia-chip"
+                  [class.dia-chip--activo]="diaSeleccionadoIndex() === i"
+                  type="button"
+                  role="tab"
+                  [attr.aria-selected]="diaSeleccionadoIndex() === i"
+                  [attr.aria-label]="dia.labelFull"
+                  (click)="selectDia(i)"
+                >{{ dia.label }}</button>
+              }
+            </div>
+
+            <!-- Lista de viajes -->
+            <div class="panel-viajes-lista" role="list">
+              @if (isLoadingViajes()) {
+                <div class="panel-estado">
+                  <span class="spinner" aria-hidden="true"></span>
+                </div>
+              } @else if (activeEmpresaId() !== null && viajesPanel().length === 0) {
+                <div class="panel-estado panel-estado--vacio">
+                  <span aria-hidden="true">🚏</span>
+                  <p>No hay viajes disponibles</p>
+                </div>
+              } @else {
+              @for (viaje of viajesPanel(); track viaje.empresa + viaje.horaSalida) {
+                <article class="panel-viaje-card" role="listitem">
+
+                  <div class="pvc-left">
+                    <span class="pvc-empresa">{{ viaje.empresa }}</span>
+                    <span class="pvc-servicio">{{ viaje.tipoServicio }}</span>
+                  </div>
+
+                  <div class="pvc-horario">
+                    <div class="pvc-tiempo">
+                      <span class="pvc-hora">{{ viaje.horaSalida }}</span>
+                      <span class="pvc-linea" aria-hidden="true"></span>
+                      <span class="pvc-hora">{{ viaje.horaLlegada }}</span>
+                    </div>
+                    <span class="pvc-ruta">{{ viaje.origen }} → {{ viaje.destino }}</span>
+                  </div>
+
+                  <div class="pvc-right">
+                    <span class="pvc-precio">{{ viaje.precio.toLocaleString('es-AR') }}</span>
+                    <div class="pvc-badges">
+                      @if (viaje.badges.includes('economico')) {
+                        <span class="pvc-badge pvc-badge--eco">⭐ Económico</span>
+                      }
+                      @if (viaje.badges.includes('sale-antes')) {
+                        <span class="pvc-badge pvc-badge--fast">⚡ Sale antes</span>
+                      }
+                      @if (viaje.badges.includes('cama')) {
+                        <span class="pvc-badge pvc-badge--cama">🛏 Cama</span>
+                      }
+                    </div>
+                  </div>
+
+                </article>
+              }
+              }
             </div>
 
           </div>
